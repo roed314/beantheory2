@@ -1,10 +1,21 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
+<h2> Today's seminars </h2>
+
+<p>
+  Header bar listing categories with seminars, with the number of seminars in each category in parentheses.
+  Clicking on a category will use javascript to show a list of seminars in that category.
+</p>
+
 <h2> Browse seminars </h2>
 
 <p>
-  Testing.
+  By date: {% for day in days %}<a href="">{{day}}</a> {% endfor %}
+</p>
+
+<p>
+  By category: {% for catlab in categories %}<a href="{{ url_for('.by_category', category=catlab[0]) }}">{{catlab[1]}}</a>; {% endfor %}
 </p>
 
 <h2> Search </h2>

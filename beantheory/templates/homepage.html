@@ -25,27 +25,11 @@
 {% block body -%}
 <div id="header">
     <div id="logo"><a href="/">
-    {# <img src="{{ url_for('static', filename='images/lmfdb-logo.png') }}" /> #}
+    <img src="{{ url_for('static', filename='beans/logo.png') }}" />
 </a></div>
     <div class="right">
       <div class="upper">
-        <div class="bread">
-          {% if bread %}
-            <a href="/">&#8962;</a>
-{# there's a house symbol &#x1f3e0; but it does not work on all browsers#}
-            {% for b in bread -%}
-              &rarr; <a href="{{ b[1] }}"> {{ b[0]|striptags }}</a>
-            {% endfor %}
-           {% else %}
-            <a href="/">&#8962;</a>
-           {% endif %}
-        </div>
         <div class="topright">
-{# search box does not work (see Issue #2389)
-          <form method="GET" action="{{ url_for('search') }}" id="search-topright">
-            <input type="text" placeholder="search ..." name="q" size="13" />
-          </form>
-#}
             {% if user_is_admin -%}
               &middot;
               <a href="{{ url_for('users.register') }}">Registration Tokens</a>
@@ -57,16 +41,9 @@
               <a href="{{ url_for('users.logout') }}">Logout</a>
               <br/>
             {%- else -%}
-              &middot;
               <a href="{{ url_for('users.info') }}">Login</a>
               <br/>
             {%- endif %}
-<!--
-            <span id="communication-wrapper">
-              <img id="communication-img" src="{{ url_for('static', filename='images/progress-green.gif') }}" />
-              <span id="communication"></span>
-            </span>
--->
           <div class="undertopright">
             <a href="{{ url_for('contact') }}" target="_blank">Feedback</a>
           </div>

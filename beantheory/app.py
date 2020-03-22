@@ -2,17 +2,18 @@
 from __future__ import absolute_import
 import os
 import time
+import datetime
 
 from flask import (Flask, g, render_template, request, make_response,
                    redirect, url_for, current_app, abort)
 from lmfdb.utils import (
-    SearchArray, TextBox, SelectBox,
+    SearchArray, TextBox, SelectBox, YesNoBox,
     to_dict, search_wrap
 )
 
 from lmfdb.logger import logger_file_handler, critical
 
-BEANTHEORY_VERSION = "Beantheory Release 0.1"
+BEANTHEORY_VERSION = "Bean Theory Release 0.1"
 
 ############################
 #         Main app         #
@@ -78,13 +79,13 @@ def ctx_proc_userdata():
     vars['bread'] = None
 
     # default title
-    vars['title'] = r'Beantheory'
+    vars['title'] = r'Bean Theory'
 
     # LMFDB version number displayed in footer
     vars['version'] = BEANTHEORY_VERSION
 
     # meta_description appears in the meta tag "description"
-    vars['meta_description'] = r'Welcome to Beantheory, a listing of mathematical research seminars and conferences.'
+    vars['meta_description'] = r'Welcome to Bean Theory, a listing of mathematical research seminars and conferences.'
     vars['shortthanks'] = r'This project is supported by <a href="%s">grants</a> from the US National Science Foundation, the UK Engineering and Physical Sciences Research Council, and the Simons Foundation.' % (url_for('acknowledgment') + "#sponsors")
     vars['feedbackpage'] = r"https://docs.google.com/spreadsheet/viewform?formkey=dDJXYXBleU1BMTFERFFIdjVXVmJqdlE6MQ"
     vars['LINK_EXT'] = lambda a, b: '<a href="%s" target="_blank">%s</a>' % (b, a)
@@ -227,30 +228,117 @@ def not_found_503(error):
 #       Top-level pages      #
 ##############################
 
+categories = [
+    ("ag", "algebraic geometry"),
+    ("at", "algebraic topology"),
+    ("ap", "analysis of PDEs"),
+    ("ct", "category theory"),
+    ("ca", "classical analysis and ODEs"),
+    ("co", "combinatorics"),
+    ("ac", "commutative algebra"),
+    ("cv", "complex variables"),
+    ("dg", "differential geometry"),
+    ("ds", "dynamical systems"),
+    ("fa", "functional analysis"),
+    ("gm", "general mathematics"),
+    ("gn", "general topology"),
+    ("gt", "geometric topology"),
+    ("gr", "group theory"),
+    ("ho", "history and overview"),
+    ("it", "information theory"),
+    ("kt", "K-theory and homology"),
+    ("lo", "logic"),
+    ("mp", "mathematical physics"),
+    ("mg", "metric geometry"),
+    ("nt", "number theory"),
+    ("na", "numerical analysis"),
+    ("oa", "operator algebras"),
+    ("oc", "optimization and control"),
+    ("pr", "probability"),
+    ("qa", "quantum algebra"),
+    ("rt", "representation theory"),
+    ("ra", "rings and algebras"),
+    ("sp", "spectral theory"),
+    ("st", "statistics theory"),
+    ("sg", "symplectic geometry")]
+
 class SemSearchArray(SearchArray):
+    noun = "seminar"
+    plural_noun = "seminars"
     def __init__(self):
+        category = SelectBox(
+            name="category",
+            label="Category",
+            options=[("", "")] + categories)
+        keywords = TextBox(
+            name="keywords",
+            label="Keywords")
         speaker = TextBox(
             name="speaker",
             label="Speaker")
+        affiliation = TextBox(
+            name="affiliation",
+            label="Affiliation")
+        institution = TextBox(
+            name="institution",
+            label="Institution")
         title = TextBox(
             name="title",
             label="Title")
+        online = SelectBox(
+            name="online",
+            label="Online",
+            options=[("", "only"),
+                     ("all", "and offline"),
+                     ("exclude", "exclude")])
+        when = SelectBox(
+            name="when",
+            label="Occuring in",
+            options=[("", ""),
+                     ("future", "the future"),
+                     ("past", "the past")])
+        date = TextBox( # should have date widget?
+            name="date",
+            label="Date")
+        video = YesNoBox(
+            name="video",
+            label="Has video")
+        avail = SelectBox(
+            name="access",
+            label="Access",
+            options=[("", ""),
+                     ("open", "open only")])
         count = TextBox(
             name="count",
             label="Results to display",
             example=50)
-        self.browse_array = [[speaker], [title], [count]]
+        self.browse_array = [[category, keywords], [speaker, affiliation], [title, institution], [when, date], [online], [video, avail], [count]]
 
 @app.route("/")
 def index():
     info = to_dict(request.args, search_array=SemSearchArray())
     if len(request.args) > 0:
         return search(info)
+    today = datetime.datetime.today().weekday() # account for time zone....
+    days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+    if today not in [5, 6]: # weekday
+        days = days[today:] + days[:today]
+        days[0] = "Today"
+        if today !=  4:
+            days[1] = "Tomorrow"
+
     return render_template(
         'browse.html',
-        title="Beantheory 2",
+        title="Bean Theory",
         info=info,
+        categories=categories,
+        days=days,
         bread=None)
+
+@app.route("/<category>")
+def by_category(category):
+    # raise error if not existing category?
+    return search({"category":category})
 
 def search(info):
     # TODO
@@ -258,7 +346,7 @@ def search(info):
 
 @app.route("/about")
 def about():
-    return render_template("about.html", title="About Beantheory")
+    return render_template("about.html", title="About Bean Theory")
 
 @app.route("/health")
 @app.route("/alive")
@@ -268,7 +356,7 @@ def alive():
     """
     from . import db
     if db.is_alive():
-        return "Beantheory!"
+        return "Bean Theory!"
     else:
         abort(503)
 
@@ -320,7 +408,7 @@ def contact():
 
 def root_static_file(name):
     def static_fn():
-        fn = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", name)
+        fn = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "lmfdb", "static", "beans", name)
         if os.path.exists(fn):
             return open(fn, "rb").read()
         critical("root_static_file: file %s not found!" % fn)
@@ -347,31 +435,10 @@ def humans_txt():
 
 @app.context_processor
 def add_colors():
-    # FIXME:
-    # - the template should use global variable g.color
-    # - try to get the color from
-    #       - the cookie
-    #       - from the config file
-    # - remove cookie at logout (see line 307 of users/main)
-    # - add cookie at login or when a color change happens (see line 175 of users/main)
-    from lmfdb.utils.color import all_color_schemes
-    color = request.args.get('color')
-    if color and color.isdigit():
-        color = int(color)
-    if color not in all_color_schemes:
-        color = None
-    if color is None:
-        from flask_login import current_user
-        userid = current_user.get_id()
-        if userid is not None:
-            from .users.pwdmanager import userdb
-            color = userdb.lookup(userid).get('color_scheme')
-        if color not in all_color_schemes:
-            color = None
-        if color is None:
-            from lmfdb.utils.config import Configuration
-            color = Configuration().get_color()
-    return dict(color=all_color_schemes[color].dict())
+    from .color import Slate
+    D = Slate().dict()
+    print(D['header_background'])
+    return {'color': Slate().dict()}
 
 @app.route("/style.css")
 def css():
@@ -407,13 +474,6 @@ _single_knowl = 'single.html'
 #    t = "News"
 #    b = [(t, url_for('news'))]
 #    return render_template(_single_knowl, title="LMFDB in the News", kid='doc.news.in_the_news', body_class=_bc, bread=b)
-
-
-
-
-###############################################
-# White listing routes for www.lmfdb.org      #
-###############################################
 
 
 def routes():
