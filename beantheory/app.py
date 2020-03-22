@@ -20,7 +20,7 @@ BEANTHEORY_VERSION = "Bean Theory Release 0.1"
 ############################
 
 app = Flask(__name__,
-            static_folder='../lmfdb/static')
+            static_folder='../lmfdb/lmfdb/static')
 
 ############################
 # App attribute functions  #

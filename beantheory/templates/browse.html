@@ -1,4 +1,16 @@
 {% extends 'homepage.html' %}
+
+{% block sidebar -%}
+{# See https://stackoverflow.com/questions/8641729/how-to-avoid-the-need-for-ctrl-click-in-a-multi-select-box-using-javascript #}
+<div id="sidebar">
+  <select name="cat" multiple="1" size="{{ categories|count }}">
+    {% for catlab in categories %}
+    <option value="{{catlab[0]}}">{{catlab[1]}}</option>
+    {% endfor %}
+  </select>
+</div>
+{%- endblock sidebar %}
+
 {% block content %}
 
 <h2> Today's seminars </h2>

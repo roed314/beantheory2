@@ -54,6 +54,14 @@
     </div>
 </div>
 
+{% block sidebar -%}
+<div id="sidebar" style="display: none; witdh=0">
+</div>
+<style type="text/css">
+#main { margin-left: 0; }
+</style>
+{%- endblock sidebar %}
+
  {% macro rightnavig(title, entries) -%}
    {% if entries %}
     <h1 class="properties-header">{{ title }}</h1>
