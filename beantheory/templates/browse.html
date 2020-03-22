@@ -1,0 +1,15 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<h2> Browse seminars </h2>
+
+<p>
+  Testing.
+</p>
+
+<h2> Search </h2>
+<form id='search' onsubmit="cleanSubmit(this.id)">
+  {{ info.search_array.html() | safe }}
+</form>
+
+{% endblock %}
